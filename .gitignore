@@ -1,0 +1,7 @@
+.obsidian/workspace*.json
+.obsidian/workspaces/
+.obsidian/cache/
+.obsidian/plugins/
+.obsidian/data.json
+Thumbs.db
+Desktop.ini

@@ -41,4 +41,3 @@
 - `skills/lint/`
 
 这 3 个本地 skill 是当前仓库的稳定操作入口，分别对应 ingest、query、lint 三条核心工作流。
-
