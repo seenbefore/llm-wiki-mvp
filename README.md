@@ -1,43 +1,87 @@
 # LLM Wiki MVP
 
-一个面向个人本地使用的 Markdown 知识库骨架。
+这是一个通过 OpenSkills 分发的 `LLM Wiki` 仓库，提供 3 个可直接安装和使用的本地 skill：`ingest`、`query`、`lint`。
 
-这个仓库把原始资料、LLM 维护的知识页、约束规则和演化日志分开，目标是让 Agent 持续把 `raw/` 里的资料编译进 `wiki/`，而不是每次提问都重新从原始资料里摸索。
+## Quick Start
 
-## 目录
+推荐先安装 skill，再让 agent 按 skill 工作；不要先手工阅读 `schema/` 再自行摸索流程。
+
+```powershell
+git clone https://github.com/seenbefore/llm-wiki-mvp
+cd llm-wiki-mvp
+openskills install https://github.com/seenbefore/llm-wiki-mvp
+openskills sync
+npx openskills read ingest
+```
+
+执行上面的命令后：
+
+- skill 会被安装到当前项目的 `.claude/skills/`
+- `openskills sync` 会生成或更新根级 `AGENTS.md`
+- agent 之后就可以按已加载的 skill 指令执行 ingest、query、lint
+
+## How To Use
+
+### 1. Ingest
+
+先读取 skill：
+
+```powershell
+npx openskills read ingest
+```
+
+然后让 agent 使用 `ingest` 处理一个或一组 `raw/` 来源，例如：
+
+- ingest `raw/articles/2026-04-07-karpathy-llm-wiki.md`
+- ingest `raw/articles/`
+
+默认目标是先生成或更新 `wiki/sources/` 页面，再按需要更新主题页、概念页、实体页，并同步 `wiki/index.md` 与 `logs/log.md`。
+
+### 2. Query
+
+先读取 skill：
+
+```powershell
+npx openskills read query
+```
+
+然后直接基于现有 wiki 提问，例如：
+
+- `LLM Wiki` 和 `RAG` 的核心区别是什么？
+- 当前仓库里的 Obsidian 链接规范是什么？
+
+`query` 会优先从 `wiki/index.md` 和现有 wiki 页面回答，而不是默认回到 `raw/`。
+
+### 3. Lint
+
+先读取 skill：
+
+```powershell
+npx openskills read lint
+```
+
+然后让 agent 对全库或局部页面做巡检，例如：
+
+- lint 全库
+- lint `wiki/concepts/`
+- lint 最近更新过的页面
+
+`lint` 默认检查孤儿页、无来源结论、索引遗漏、错链、frontmatter 问题、未标记冲突，以及不符合 Obsidian 规范的双链。
+
+## Repo Structure
 
 - `raw/`：原始资料，只读层。
 - `wiki/`：知识中间层，由 Agent 增量维护。
-- `schema/`：Agent 维护规则、模板和工作流说明。
+- `schema/`：工作流、模板和约束规则。
 - `logs/`：摄入、问答沉淀和巡检日志。
+- `skills/`：仓库内的 skill 源定义。
+- `.claude/skills/`：通过 `openskills install` 安装到当前项目后的 skill 副本。
 
-## 推荐使用方式
+## Notes
 
-1. 把网页剪藏、PDF、摘录文本、图片等放进 `raw/`。
-2. 让 Agent 依据 `schema/AGENTS.md` 处理新资料。
-3. 先生成 `wiki/sources/` 摘要页，再更新相关主题页、概念页或实体页。
-4. 定期执行一次 `lint` 检查，修复断链、孤儿页、无来源结论和重复页面。
-
-## Obsidian 友好约定
-
-- 直接把本仓库文件夹作为一个 Obsidian vault 打开。
-- `wiki/` 是日常浏览的主区域，适合配合双链和图谱视图使用。
-- `.obsidian/` 下的工作区状态默认不提交，只保留必要说明。
-- 原始资料建议按来源类型整理，并把附件统一放到 `raw/assets/`。
-- 文件名优先使用 `kebab-case`，正文中优先使用 `[[文件名|显示文本]]`。
+- 这 3 个 skill 的源定义位于 `skills/ingest/`、`skills/query/`、`skills/lint/`。
+- 根级 `AGENTS.md` 由 `openskills sync` 生成或更新，用来把已安装 skill 暴露给 agent。
+- 如果你直接把仓库作为 Obsidian vault 打开，`wiki/` 是日常浏览主区域。
+- 文件名优先使用 `kebab-case`，正文优先使用 `[[文件名|显示文本]]`。
 - 如果一个页面长期会以多个名字被引用，把这些名字写进 YAML `aliases`，不要直接依赖裸显示标题。
 
-## 第一次使用
-
-- 阅读 `schema/AGENTS.md`
-- 参考 `schema/templates/` 中的最小模板
-- 从 `schema/workflows.md` 的 `ingest` 流程开始
-- 在 `logs/log.md` 记录每次重要变更
-
-## Local Skills
-
-- `skills/ingest/`
-- `skills/query/`
-- `skills/lint/`
-
-这 3 个本地 skill 是当前仓库的稳定操作入口，分别对应 ingest、query、lint 三条核心工作流。

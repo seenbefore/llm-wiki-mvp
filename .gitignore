@@ -3,5 +3,7 @@
 .obsidian/cache/
 .obsidian/plugins/
 .obsidian/data.json
+.claude/
+AGENTS.md
 Thumbs.db
 Desktop.ini
