@@ -7,6 +7,30 @@ description: Run repository-local lint workflow for this LLM Wiki.
 
 本 skill 用于对当前 `wiki/` 做仓库级健康检查，并按风险等级决定直接修复还是先报告。
 
+## Wiki 根路径（LLM_WIKI_ROOT）
+
+本 skill 中的相对路径（如 `schema/AGENTS.md`、`wiki/`、`raw/`、`logs/`）默认相对于 **当前 Cursor 工作区根目录**。若你在其他项目仓库中打开会话，且需要把读写到本机某份 `llm-wiki-mvp` 克隆，请设置环境变量：
+
+- **变量名：** `LLM_WIKI_ROOT`
+- **含义：** 本机 `llm-wiki-mvp` 仓库根的绝对路径（该根下须存在 `schema/AGENTS.md`、`wiki/` 等）。
+
+**解析规则：**
+
+1. 若 `LLM_WIKI_ROOT` 已设置且非空，本 skill 中所有相对路径均相对于该路径解析（Windows：将子路径与 `$env:LLM_WIKI_ROOT` 拼接；macOS/Linux：等价路径拼接）。
+2. 若未设置，相对路径相对于当前工作区根目录（与直接在本仓库根打开工作区时使用本 skill 的行为一致）。
+
+**校验（强制执行）：** 当依赖 `LLM_WIKI_ROOT` 时，在首次读写该仓库内文件之前，必须先确认该根下存在 `schema/AGENTS.md`。若不存在，停止执行并提示用户：`LLM_WIKI_ROOT` 指向的目录不是有效的 llm-wiki-mvp 仓库；**不得**在该根下新建 `wiki/` 等目录。
+
+**配置示例（Windows PowerShell，用户级持久，重启 Cursor 或新终端后生效）：**
+
+```powershell
+[System.Environment]::SetEnvironmentVariable('LLM_WIKI_ROOT', 'E:\path\to\llm-wiki-mvp', 'User')
+```
+
+将示例中的路径改为你本机克隆路径。会话级仅当前进程可用：`$env:LLM_WIKI_ROOT = 'E:\path\to\llm-wiki-mvp'`。
+
+**快速验证（PowerShell）：** `Test-Path (Join-Path $env:LLM_WIKI_ROOT 'schema/AGENTS.md')` 应为 `True`。
+
 ## 输入
 
 - 最小输入：可为空
