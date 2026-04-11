@@ -12,12 +12,14 @@
 
 ## 文件结构（变更锁定）
 
-| 文件 | 职责 |
-|------|------|
-| `skills/ingest/SKILL.md` | ingest 的路径根解析与校验说明 |
-| `skills/query/SKILL.md` | query 同上 |
-| `skills/lint/SKILL.md` | lint 同上 |
-| `README.md` | 贡献者可见的一句「跨项目请设 `LLM_WIKI_ROOT`」及指向 |
+
+| 文件                       | 职责                                 |
+| ------------------------ | ---------------------------------- |
+| `skills/ingest/SKILL.md` | ingest 的路径根解析与校验说明                 |
+| `skills/query/SKILL.md`  | query 同上                           |
+| `skills/lint/SKILL.md`   | lint 同上                            |
+| `README.md`              | 贡献者可见的一句「跨项目请设 `LLM_WIKI_ROOT`」及指向 |
+
 
 **不在本计划内：** 修改用户目录下的全局副本（由各人 `openskills install/sync` 从本仓库拉取）；不新增 CI。
 
@@ -27,7 +29,7 @@
 
 以下整段插入到每个文件的 **一级标题与 `## 输入` 之间**（即紧接在首段说明文字之后、`## 输入` 之前）。三份文件**逐字相同**。
 
-````markdown
+```markdown
 ## Wiki 根路径（LLM_WIKI_ROOT）
 
 本 skill 中的相对路径（如 `schema/AGENTS.md`、`wiki/`、`raw/`、`logs/`）默认相对于 **当前 Cursor 工作区根目录**。若你在其他项目仓库中打开会话，且需要把读写到本机某份 `llm-wiki-mvp` 克隆，请设置环境变量：
@@ -51,16 +53,16 @@
 将示例中的路径改为你本机克隆路径。会话级仅当前进程可用：`$env:LLM_WIKI_ROOT = 'E:\path\to\llm-wiki-mvp'`。
 
 **快速验证（PowerShell）：** `Test-Path (Join-Path $env:LLM_WIKI_ROOT 'schema/AGENTS.md')` 应为 `True`。
-````
+```
 
 ---
 
 ### Task 1: `skills/ingest/SKILL.md`
 
 **Files:**
-- Modify: `skills/ingest/SKILL.md`（在 `# Ingest` 下首段说明与 `## 输入` 之间插入「共用段落」）
 
-- [ ] **Step 1: 插入 Wiki 根路径一节**
+- Modify: `skills/ingest/SKILL.md`（在 `# Ingest` 下首段说明与 `## 输入` 之间插入「共用段落」）
+- **Step 1: 插入 Wiki 根路径一节**
 
 在下列两行之间插入上面「共用段落」全文（含外层 `## Wiki 根路径` 至末尾验证行）：
 
@@ -72,7 +74,7 @@
 
 插入后，`## 输入` 紧跟共用段落的最后一行（空行后接 `## 输入` 亦可，保持与仓库其余 Markdown 空行风格一致即可）。
 
-- [ ] **Step 2: 校验文件包含关键字**
+- **Step 2: 校验文件包含关键字**
 
 Run:
 
@@ -83,7 +85,7 @@ rg -n "LLM_WIKI_ROOT|schema/AGENTS.md" "skills\ingest\SKILL.md"
 
 Expected: 至少两行匹配，且文件中存在「校验（强制执行）」。
 
-- [ ] **Step 3: Commit**
+- **Step 3: Commit**
 
 ```powershell
 Set-Location "e:\icinfo\llm-wiki-mvp"
@@ -96,9 +98,9 @@ git commit -m "docs(skill): ingest 说明 LLM_WIKI_ROOT 路径解析"
 ### Task 2: `skills/query/SKILL.md`
 
 **Files:**
-- Modify: `skills/query/SKILL.md`（在首段与 `## 输入` 之间插入同一「共用段落」）
 
-- [ ] **Step 1: 插入位置**
+- Modify: `skills/query/SKILL.md`（在首段与 `## 输入` 之间插入同一「共用段落」）
+- **Step 1: 插入位置**
 
 在下列两行之间插入与 Task 1 **完全相同**的「共用段落」：
 
@@ -108,7 +110,7 @@ git commit -m "docs(skill): ingest 说明 LLM_WIKI_ROOT 路径解析"
 ## 输入
 ```
 
-- [ ] **Step 2: 校验**
+- **Step 2: 校验**
 
 Run:
 
@@ -119,7 +121,7 @@ rg -n "LLM_WIKI_ROOT" "skills\query\SKILL.md"
 
 Expected: 至少一行匹配。
 
-- [ ] **Step 3: Commit**
+- **Step 3: Commit**
 
 ```powershell
 Set-Location "e:\icinfo\llm-wiki-mvp"
@@ -132,9 +134,9 @@ git commit -m "docs(skill): query 说明 LLM_WIKI_ROOT 路径解析"
 ### Task 3: `skills/lint/SKILL.md`
 
 **Files:**
-- Modify: `skills/lint/SKILL.md`（在首段与 `## 输入` 之间插入同一「共用段落」）
 
-- [ ] **Step 1: 插入位置**
+- Modify: `skills/lint/SKILL.md`（在首段与 `## 输入` 之间插入同一「共用段落」）
+- **Step 1: 插入位置**
 
 在下列两行之间插入与 Task 1 **完全相同**的「共用段落」：
 
@@ -144,7 +146,7 @@ git commit -m "docs(skill): query 说明 LLM_WIKI_ROOT 路径解析"
 ## 输入
 ```
 
-- [ ] **Step 2: 校验**
+- **Step 2: 校验**
 
 Run:
 
@@ -155,7 +157,7 @@ rg -n "LLM_WIKI_ROOT" "skills\lint\SKILL.md"
 
 Expected: 至少一行匹配。
 
-- [ ] **Step 3: Commit**
+- **Step 3: Commit**
 
 ```powershell
 Set-Location "e:\icinfo\llm-wiki-mvp"
@@ -168,17 +170,17 @@ git commit -m "docs(skill): lint 说明 LLM_WIKI_ROOT 路径解析"
 ### Task 4: `README.md` 一句说明
 
 **Files:**
+
 - Modify: `README.md`（`## Notes` 小节）
+- **Step 1: 在 Notes 中新增一条 bullet**
 
-- [ ] **Step 1: 在 Notes 中新增一条 bullet**
-
-在 `## Notes` 下、现有列表**末尾**追加一条（保持 `- ` 列表格式），内容为：
+在 `## Notes` 下、现有列表**末尾**追加一条（保持 `-`  列表格式），内容为：
 
 ```markdown
 - 若在**其他项目工作区**中调用已安装的 ingest/query/lint，需要读写本机某份 `llm-wiki-mvp` 克隆，请设置环境变量 `LLM_WIKI_ROOT` 指向该仓库根；详见各 skill 内「Wiki 根路径（LLM_WIKI_ROOT）」一节。
 ```
 
-- [ ] **Step 2: 校验**
+- **Step 2: 校验**
 
 Run:
 
@@ -189,7 +191,7 @@ rg -n "LLM_WIKI_ROOT" "README.md"
 
 Expected: 至少一行匹配。
 
-- [ ] **Step 3: Commit**
+- **Step 3: Commit**
 
 ```powershell
 Set-Location "e:\icinfo\llm-wiki-mvp"
@@ -203,7 +205,7 @@ git commit -m "docs: README 说明跨项目使用 LLM_WIKI_ROOT"
 
 **Files:** 无
 
-- [ ] **Step 1: 全库字符串一致性抽查**
+- **Step 1: 全库字符串一致性抽查**
 
 Run:
 
@@ -214,7 +216,7 @@ rg "LLM_WIKI_ROOT" skills/ README.md
 
 Expected: `skills/ingest/SKILL.md`、`skills/query/SKILL.md`、`skills/lint/SKILL.md`、`README.md` 均出现匹配。
 
-- [ ] **Step 2: （可选）本机环境验证**
+- **Step 2: （可选）本机环境验证**
 
 在已设置 `LLM_WIKI_ROOT` 的 PowerShell 会话中：
 
@@ -224,7 +226,7 @@ Test-Path (Join-Path $env:LLM_WIKI_ROOT 'schema/AGENTS.md')
 
 Expected: `True`（仅当变量指向本仓库或有效克隆时）。
 
-- [ ] **Step 3: 记录发布侧提醒（不提交代码）**
+- **Step 3: 记录发布侧提醒（不提交代码）**
 
 合并并发布后，使用者若从远程安装 skill，需在各自仓库执行 `openskills sync`（或项目文档中的等价命令）以拉取更新后的 `SKILL.md`。无需在本仓库新增文件。
 
@@ -232,13 +234,15 @@ Expected: `True`（仅当变量指向本仓库或有效克隆时）。
 
 ## Self-Review（对照规格）
 
-| 规格要求（见 `2026-04-11-explicit-wiki-root-env-design.md`） | 对应任务 |
-|------------------------------------------------------------|----------|
-| 变量名 `LLM_WIKI_ROOT`、未设置则工作区根 | Task 1–3 共用段落 |
-| 设置时校验 `schema/AGENTS.md` 存在 | Task 1–3 共用段落「校验（强制执行）」 |
-| 失败提示语义 | Task 1–3 共用段落 |
-| PowerShell 持久化示例 | Task 1–3 共用段落 |
-| 可选 README / schema 简短说明 | Task 4 |
+
+| 规格要求（见 `2026-04-11-explicit-wiki-root-env-design.md`） | 对应任务                    |
+| ----------------------------------------------------- | ----------------------- |
+| 变量名 `LLM_WIKI_ROOT`、未设置则工作区根                          | Task 1–3 共用段落           |
+| 设置时校验 `schema/AGENTS.md` 存在                           | Task 1–3 共用段落「校验（强制执行）」 |
+| 失败提示语义                                                | Task 1–3 共用段落           |
+| PowerShell 持久化示例                                      | Task 1–3 共用段落           |
+| 可选 README / schema 简短说明                               | Task 4                  |
+
 
 **Placeholder 扫描：** 无 TBD/TODO。  
 **类型/命名一致性：** 全仓库统一使用 `LLM_WIKI_ROOT`，与规格一致。

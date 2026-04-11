@@ -87,3 +87,4 @@ description: Run repository-local ingest workflow for this LLM Wiki.
 - `wiki/index.md` 已反映本次新增或重要更新
 - `logs/log.md` 已追加一条 ingest 记录
 - 若有冲突，页面中明确标出 `冲突/待核实`
+
