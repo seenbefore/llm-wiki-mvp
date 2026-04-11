@@ -84,4 +84,5 @@ npx openskills read lint
 - 如果你直接把仓库作为 Obsidian vault 打开，`wiki/` 是日常浏览主区域。
 - 文件名优先使用 `kebab-case`，正文优先使用 `[[文件名|显示文本]]`。
 - 如果一个页面长期会以多个名字被引用，把这些名字写进 YAML `aliases`，不要直接依赖裸显示标题。
+- 若在**其他项目工作区**中调用已安装的 ingest/query/lint，需要读写本机某份 `llm-wiki-mvp` 克隆，请设置环境变量 `LLM_WIKI_ROOT` 指向该仓库根；详见各 skill 内「Wiki 根路径（LLM_WIKI_ROOT）」一节。
 
