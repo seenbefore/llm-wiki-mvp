@@ -3,6 +3,7 @@
 .obsidian/cache/
 .obsidian/plugins/
 .obsidian/data.json
+.agents/
 .claude/
 AGENTS.md
 Thumbs.db

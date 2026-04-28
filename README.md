@@ -8,17 +8,18 @@
 
 ```powershell
 git clone https://github.com/seenbefore/llm-wiki-mvp
-cd llm-wiki-mvp
-openskills install https://github.com/seenbefore/llm-wiki-mvp
-openskills sync
+openskills install -g -y https://github.com/seenbefore/llm-wiki-mvp
+openskills list
 npx openskills read ingest
 ```
 
 执行上面的命令后：
 
-- skill 会被安装到当前项目的 `.claude/skills/`
-- `openskills sync` 会生成或更新根级 `AGENTS.md`
-- agent 之后就可以按已加载的 skill 指令执行 task-start、task-close、ingest、query、lint
+- skill 会被安装到用户级全局位置，而不是当前项目的 `.claude/skills/` 或 `.agents/skills/`
+- `openskills list` 应显示 task-start、task-close、ingest、query、lint 为 `global`
+- agent 之后可在任意项目中通过 `npx openskills read <skill-name>` 加载这些 skill
+
+不要省略 `-g`；`openskills install` 默认是项目安装。
 
 ## Updating A Private Knowledge Repo
 
@@ -169,12 +170,12 @@ npx openskills read lint
 - `schema/`：工作流、模板和约束规则。
 - `logs/`：摄入、问答沉淀和巡检日志。
 - `skills/`：仓库内的 skill 源定义。
-- `.claude/skills/`：通过 `openskills install` 安装到当前项目后的 skill 副本。
 
 ## Notes
 
 - 这 5 个 skill 的源定义位于 `skills/task-start/`、`skills/task-close/`、`skills/ingest/`、`skills/query/`、`skills/lint/`。
-- 根级 `AGENTS.md` 由 `openskills sync` 生成或更新，用来把已安装 skill 暴露给 agent。
+- skill 应通过 `openskills install -g -y https://github.com/seenbefore/llm-wiki-mvp` 全局安装；不要使用默认的项目安装。
+- 若某个项目需要生成本地 `AGENTS.md` 暴露全局 skill，可在该项目中按需运行 `openskills sync`；这不是安装 skill。
 - 如果你直接把仓库作为 Obsidian vault 打开，`wiki/` 是日常浏览主区域。
 - 文件名优先使用 `kebab-case`，正文优先使用 `[[文件名|显示文本]]`。
 - 如果一个页面长期会以多个名字被引用，把这些名字写进 YAML `aliases`，不要直接依赖裸显示标题。

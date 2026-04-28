@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 在仓库内三份 skill 源文件（`skills/*/SKILL.md`）中增加与规格一致的 `LLM_WIKI_ROOT` 路径解析说明，并在根 `README.md` 增加一句跨项目使用提示；合并后用户通过 `openskills sync` 更新本机/全局安装副本。
+**Goal:** 在仓库内三份 skill 源文件（`skills/*/SKILL.md`）中增加与规格一致的路径解析说明，并在根 `README.md` 增加跨项目使用提示；合并后用户通过 `openskills install -g -y https://github.com/seenbefore/llm-wiki-mvp` 安装或更新用户级全局 skill。
 
 **Architecture:** 规格见 `docs/superpowers/specs/2026-04-11-explicit-wiki-root-env-design.md`。实现上仅在 Markdown 中增加**同一语义**的一节（三份 skill 文字等价），不引入脚本或代码。Agent 执行 skill 时按节内规则在首次读写前校验 `schema/AGENTS.md`。
 
@@ -21,7 +21,7 @@
 | `README.md`              | 贡献者可见的一句「跨项目请设 `LLM_WIKI_ROOT`」及指向 |
 
 
-**不在本计划内：** 修改用户目录下的全局副本（由各人 `openskills install/sync` 从本仓库拉取）；不新增 CI。
+**不在本计划内：** 修改用户目录下的全局副本（由各人 `openskills install -g` 或 `openskills update` 从本仓库拉取）；不新增 CI。
 
 ---
 
@@ -228,7 +228,13 @@ Expected: `True`（仅当变量指向本仓库或有效克隆时）。
 
 - **Step 3: 记录发布侧提醒（不提交代码）**
 
-合并并发布后，使用者若从远程安装 skill，需在各自仓库执行 `openskills sync`（或项目文档中的等价命令）以拉取更新后的 `SKILL.md`。无需在本仓库新增文件。
+合并并发布后，使用者若从远程安装 skill，应执行：
+
+```powershell
+openskills install -g -y https://github.com/seenbefore/llm-wiki-mvp
+```
+
+已经全局安装过的使用者可执行 `openskills update` 拉取更新后的 `SKILL.md`。不要使用默认的项目安装；`openskills sync` 只用于在某个工作区生成或更新 `AGENTS.md`，不是安装步骤。
 
 ---
 
