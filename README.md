@@ -53,6 +53,39 @@ git push private master
 
 ## How To Use
 
+### Wiki Root Config
+
+在任意项目工作区中使用这些 skill 前，先在用户目录写入本机 wiki 仓库根路径配置。配置文件固定为：
+
+`%USERPROFILE%\.config\llm-wiki-mvp\config.json`
+
+内容示例：
+
+```json
+{
+  "root": "E:\\code\\llm-wiki-mvp"
+}
+```
+
+`root` 必须指向 `llm-wiki-mvp` 仓库根目录，不是 `wiki/` 子目录。Windows PowerShell 创建示例：
+
+```powershell
+$configDir = Join-Path $env:USERPROFILE '.config\llm-wiki-mvp'
+New-Item -ItemType Directory -Force -Path $configDir | Out-Null
+$config = @{ root = 'E:\code\llm-wiki-mvp' } | ConvertTo-Json
+Set-Content -Encoding UTF8 (Join-Path $configDir 'config.json') $config
+```
+
+快速验证：
+
+```powershell
+$config = Get-Content (Join-Path $env:USERPROFILE '.config\llm-wiki-mvp\config.json') -Raw | ConvertFrom-Json
+Test-Path (Join-Path $config.root 'schema/AGENTS.md')
+Test-Path (Join-Path $config.root 'wiki')
+```
+
+旧环境变量 `LLM_WIKI_ROOT` 已弃用；即使存在，skill 也不应把它作为路径来源。
+
 ### 1. Task Start
 
 先读取 skill：
@@ -145,4 +178,4 @@ npx openskills read lint
 - 如果你直接把仓库作为 Obsidian vault 打开，`wiki/` 是日常浏览主区域。
 - 文件名优先使用 `kebab-case`，正文优先使用 `[[文件名|显示文本]]`。
 - 如果一个页面长期会以多个名字被引用，把这些名字写进 YAML `aliases`，不要直接依赖裸显示标题。
-- 若在**其他项目工作区**中调用已安装的 task-start/task-close/ingest/query/lint，需要读写本机某份 `llm-wiki-mvp` 克隆，请设置环境变量 `LLM_WIKI_ROOT` 指向该仓库根；详见各 skill 内「Wiki 根路径（LLM_WIKI_ROOT）」一节。
+- 若在**其他项目工作区**中调用已安装的 task-start/task-close/ingest/query/lint，需要读写本机某份 `llm-wiki-mvp` 克隆，请设置用户配置文件 `%USERPROFILE%\.config\llm-wiki-mvp\config.json`；详见各 skill 内「Wiki 根路径（用户配置文件）」一节。

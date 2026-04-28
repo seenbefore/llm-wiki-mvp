@@ -1,91 +1,84 @@
-# 设计：通过环境变量显式指定 LLM Wiki 仓库根路径
+# 设计：通过用户配置文件指定 LLM Wiki 仓库根路径
 
 **日期：** 2026-04-11  
-**状态：** 草案（供全局 skill 与用户文档对齐）
+**状态：** 已更新（Config Only，替代旧环境变量方案）
 
 ## 背景
 
-Skill 文件可放在用户级目录（全局加载），但 `ingest` / `query` / `lint` 的读写目标应是 **llm-wiki-mvp** 仓库，而非当前打开的任意项目（例如「甲项目」）。相对路径默认相对 **Cursor 工作区根**，在甲项目中会错误地指向甲目录。
+Skill 文件可放在用户级目录（全局加载），但 `task-start` / `task-close` / `ingest` / `query` / `lint` 的读写目标应是 **llm-wiki-mvp** 仓库，而非当前打开的任意项目。过去依赖 `LLM_WIKI_ROOT` 环境变量；如果环境变量失效、未被子进程继承或被清理，skill 容易回退到错误工作区。
 
 ## 目标
 
-- 在任意工作区打开会话时，只要本机配置正确，Agent 仍能将 `wiki/`、`raw/`、`schema/`、`logs/` 解析到 **真实的 llm-wiki-mvp 克隆路径**。
-- 配置方式简单、可审计：不依赖把 wiki 嵌进甲仓库，也不依赖多根工作区（可作为可选补充）。
-- 未配置时行为明确：与「工作区即 wiki 根」一致，避免静默写错位置。
-
-## 非目标
-
-- 不在本规格中规定团队如何分发全局 `SKILL.md`（仅约定解析规则）。
-- 不要求跨机器同步环境变量值（每人本机路径不同属正常）。
+- 在任意工作区打开会话时，Agent 都能通过一个稳定的用户目录配置文件找到真实的 `llm-wiki-mvp` 克隆路径。
+- 未配置或配置错误时明确停止，避免静默写错项目目录。
+- 配置方式可审计、跨 shell 稳定，不依赖环境变量继承。
 
 ## 方案概述
 
-使用 **单一环境变量** 指向 llm-wiki-mvp 仓库的**绝对路径**（目录级，无尾随反斜杠亦可）。
+使用用户目录 JSON 配置文件指向 `llm-wiki-mvp` 仓库根目录。
 
-### 变量名
-
-- **名称：** `LLM_WIKI_ROOT`
+- **配置文件：** `%USERPROFILE%\.config\llm-wiki-mvp\config.json`
+- **字段名：** `root`
 - **含义：** 本机上一份 `llm-wiki-mvp` 克隆的根目录（包含 `schema/AGENTS.md`、`wiki/`、`raw/` 等）。
 
-备选：若未来与其它工具冲突，可加前缀（如 `ICINFO_LLM_WIKI_ROOT`）；在团队内统一即可。
+配置示例：
 
-### 解析规则（供全局 SKILL 引用）
-
-1. **若** `LLM_WIKI_ROOT` 已设置且非空字符串：
-  - 所有 skill 中的相对路径（如 `schema/AGENTS.md`、`wiki/sources/`）均解释为：  
-   `Join-Path $env:LLM_WIKI_ROOT '<相对路径>'`（Windows）或等价拼接（POSIX）。
-2. **否则**：
-  - 相对路径解释为当前 **工作区根目录** 下的路径（与现有仓库内 skill 行为一致）。
-3. **验证（建议强制执行）**：
-  - 当使用 `LLM_WIKI_ROOT` 时，在首次读写前检查路径  
-   `Join-Path $env:LLM_WIKI_ROOT 'schema/AGENTS.md'`  
-   是否存在。  
-  - 若不存在：停止并提示用户变量指向了错误目录或未完整克隆，**禁止**在未知根下创建 `wiki/` 等目录。
-
-### 失败与提示文案（建议）
-
-- 变量已设置但 `schema/AGENTS.md` 缺失：  
-`LLM_WIKI_ROOT` 指向的目录不是有效的 llm-wiki-mvp 仓库，请检查路径或重新克隆。
-- 变量未设置且在非 wiki 工作区执行 ingest：  
-可提示（可选）：若意图操作另一路径下的 wiki，请设置 `LLM_WIKI_ROOT`；否则请将工作区切换为 llm-wiki-mvp 根目录。
-
-## 与用户文档的衔接
-
-在面向贡献者的说明中增加 **Windows（PowerShell）** 持久化示例（用户级，重启后仍生效）：
-
-```powershell
-[System.Environment]::SetEnvironmentVariable('LLM_WIKI_ROOT', 'E:\icinfo\llm-wiki-mvp', 'User')
+```json
+{
+  "root": "E:\\code\\llm-wiki-mvp"
+}
 ```
 
-会话级（仅当前终端 / 当前 Cursor 子进程继承）可用：
+## 解析规则
+
+1. Skill 必须先读取 `%USERPROFILE%\.config\llm-wiki-mvp\config.json`。
+2. 若配置文件存在、JSON 有效，且 `root` 为非空字符串，所有相对路径均解释为 `root` 下的路径。
+3. 若配置文件不存在、JSON 无法解析、`root` 缺失或为空，停止执行并提示用户创建或修复配置文件。
+4. 旧环境变量 `LLM_WIKI_ROOT` 已弃用；即使存在，也不得作为路径来源。若检测到它，请提示用户迁移到用户配置文件。
+
+## 校验与失败提示
+
+首次读写仓库内文件之前，必须确认：
+
+- `root/schema/AGENTS.md` 存在。
+- `root/wiki/` 存在。
+
+若任一缺失，停止执行并提示：配置文件中的 `root` 不是有效的 `llm-wiki-mvp` 仓库根。不得自动创建 `wiki/`、`raw/`、`schema/` 等目录。
+
+错误提示应区分：
+
+- 配置文件不存在。
+- JSON 无法解析。
+- `root` 缺失或为空。
+- `root` 不是有效的 `llm-wiki-mvp` 仓库根，或误指向 `wiki/` 子目录。
+
+## 用户文档示例
+
+Windows PowerShell：
 
 ```powershell
-$env:LLM_WIKI_ROOT = 'E:\icinfo\llm-wiki-mvp'
+$configDir = Join-Path $env:USERPROFILE '.config\llm-wiki-mvp'
+New-Item -ItemType Directory -Force -Path $configDir | Out-Null
+$config = @{ root = 'E:\code\llm-wiki-mvp' } | ConvertTo-Json
+Set-Content -Encoding UTF8 (Join-Path $configDir 'config.json') $config
 ```
 
-Linux/macOS 可使用 `export LLM_WIKI_ROOT=/path/to/llm-wiki-mvp` 或写入 `~/.profile` 等，由团队文档统一即可。
+快速验证：
+
+```powershell
+$config = Get-Content (Join-Path $env:USERPROFILE '.config\llm-wiki-mvp\config.json') -Raw | ConvertFrom-Json
+Test-Path (Join-Path $config.root 'schema/AGENTS.md')
+Test-Path (Join-Path $config.root 'wiki')
+```
 
 ## 安全与协作注意
 
-- 环境变量**不**提交到仓库；每人本机路径不同，符合预期。
-- 路径指向的是用户本机克隆，无额外机密；仍需避免在聊天中粘贴含敏感信息的绝对路径（常规操作习惯）。
+- 配置文件不提交到仓库；每台机器自行配置。
+- 路径指向的是用户本机克隆，无额外机密；仍需避免在公开聊天中粘贴含敏感信息的绝对路径。
+- 多根工作区不参与根路径选择；配置文件是唯一有效来源。
 
-## 与多根工作区关系
+## 后续实现项
 
-- **显式根路径**与**多根工作区**可并存：多根时若仍设置 `LLM_WIKI_ROOT`，以变量为准，避免「两个根里都有 `wiki/`」的歧义。
-- 若未设置变量且使用多根工作区，全局 skill 必须额外规定「以哪一根为 wiki 根」——本规格推荐优先采用 `LLM_WIKI_ROOT` 消除歧义。
-
-## 后续实现项（不在本文件内展开代码）
-
-1. 在用户级 `ingest` / `query` / `lint` 的 `SKILL.md` 中增加一节「路径解析：LLM_WIKI_ROOT」，与上文规则逐字或等价对齐。
-2. （可选）在本仓库 `README` 或 `schema/` 下增加简短「跨项目使用」说明，指向环境变量配置。
-3. 实现或演练时可用 PowerShell 一行验证：
-  `Test-Path (Join-Path $env:LLM_WIKI_ROOT 'schema/AGENTS.md')`
-
-## 自审（Spec Self-Review）
-
-- **占位：** 无 TBD。
-- **一致性：** 解析顺序与验证步骤一致；与「未设置则工作区根」兼容旧行为。
-- **范围：** 仅约定根路径发现机制，不扩展 ingest 业务规则。
-- **歧义：** 已明确「设置变量则以变量为准」；多根未设置变量时仍属未覆盖场景，建议用变量或切换单根 wiki 工作区。
-
+1. 在 `task-start` / `task-close` / `ingest` / `query` / `lint` 的 `SKILL.md` 中增加「Wiki 根路径（用户配置文件）」规则。
+2. 更新 `README.md` 的跨项目使用说明。
+3. 保留 `LLM_WIKI_ROOT` 的弃用提示，但不再将其作为 fallback。

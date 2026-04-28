@@ -9,19 +9,47 @@ description: Close an important task by deciding what should be preserved and wr
 
 它默认**不直接写 `wiki/`**。知识层更新应由 `ingest` 处理。
 
-## Wiki 根路径（LLM_WIKI_ROOT）
+## Wiki 根路径（用户配置文件）
 
-本 skill 中的相对路径（如 `schema/AGENTS.md`、`raw/`、`wiki/`）默认相对于 **当前工作区根目录**。若你在其他项目仓库中打开会话，且需要写入本机某份 `llm-wiki-mvp` 克隆，请设置环境变量：
+本 skill 中的相对路径（如 `schema/AGENTS.md`、`wiki/`、`raw/`、`logs/`）必须先通过用户目录配置文件解析到本机 `llm-wiki-mvp` 仓库根。
 
-- **变量名：** `LLM_WIKI_ROOT`
-- **含义：** 本机 `llm-wiki-mvp` 仓库根的绝对路径（该根下须存在 `schema/AGENTS.md`、`raw/`、`wiki/` 等）。
+- **配置文件：** `%USERPROFILE%\.config\llm-wiki-mvp\config.json`
+- **字段名：** `root`
+- **含义：** 本机 `llm-wiki-mvp` 仓库根的绝对路径（不是 `wiki/` 子目录；该根下须存在 `schema/AGENTS.md`、`wiki/` 等）。
+
+配置示例：
+
+```json
+{
+  "root": "E:\\code\\llm-wiki-mvp"
+}
+```
 
 **解析规则：**
 
-1. 若 `LLM_WIKI_ROOT` 已设置且非空，本 skill 中所有相对路径均相对于该路径解析。
-2. 若未设置，相对路径相对于当前工作区根目录。
+1. 必须先读取 `%USERPROFILE%\.config\llm-wiki-mvp\config.json`。
+2. 若配置文件存在、JSON 有效，且 `root` 为非空字符串，本 skill 中所有相对路径均相对于 `root` 解析。
+3. 若配置文件不存在、JSON 无法解析、`root` 缺失或为空，停止执行并提示用户创建或修复该配置文件。
+4. 旧环境变量 `LLM_WIKI_ROOT` 已弃用；即使存在，也不得作为路径来源。若检测到它，请提示用户迁移到 `%USERPROFILE%\.config\llm-wiki-mvp\config.json`。
 
-**校验（强制执行）：** 当依赖 `LLM_WIKI_ROOT` 时，在首次读写该仓库内文件之前，必须先确认该根下存在 `schema/AGENTS.md`。若不存在，停止执行并提示用户：`LLM_WIKI_ROOT` 指向的目录不是有效的 llm-wiki-mvp 仓库；不得在该根下新建 `raw/`、`wiki/` 等目录。
+**校验（强制执行）：** 在首次读写仓库内文件之前，必须确认 `root` 下同时存在 `schema/AGENTS.md` 和 `wiki/`。若任一缺失，停止执行并提示：配置文件中的 `root` 不是有效的 `llm-wiki-mvp` 仓库根；不得自动创建 `wiki/`、`raw/`、`schema/` 等目录。
+
+**配置示例（Windows PowerShell）：**
+
+```powershell
+$configDir = Join-Path $env:USERPROFILE '.config\llm-wiki-mvp'
+New-Item -ItemType Directory -Force -Path $configDir | Out-Null
+$config = @{ root = 'E:\code\llm-wiki-mvp' } | ConvertTo-Json
+Set-Content -Encoding UTF8 (Join-Path $configDir 'config.json') $config
+```
+
+**快速验证（PowerShell）：**
+
+```powershell
+$config = Get-Content (Join-Path $env:USERPROFILE '.config\llm-wiki-mvp\config.json') -Raw | ConvertFrom-Json
+Test-Path (Join-Path $config.root 'schema/AGENTS.md')
+Test-Path (Join-Path $config.root 'wiki')
+```
 
 ## 输入
 
@@ -139,4 +167,3 @@ raw/task-notes/YYYY-MM-DD-<task-slug>.md
 - 未直接修改 `wiki/`。
 - 输出中包含下一步 `ingest` 建议。
 - 输出中包含建议 git commit message。
-

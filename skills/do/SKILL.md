@@ -9,29 +9,47 @@ description: 根据任务在本地 llm-wiki wiki/ 中只读检索最佳实践并
 
 与 `query` 的区别：`query` 可回答问题并**沉淀**分析页等；`do` **不得**向 `wiki/` 写入任何内容。
 
-## Wiki 根路径（LLM_WIKI_ROOT）
+## Wiki 根路径（用户配置文件）
 
-本 skill 中指向知识库的相对路径（如 `schema/AGENTS.md`、`wiki/`）默认相对于 **当前 Cursor 工作区根目录**。若你在其它项目仓库中打开会话，且需要读取本机某份 `llm-wiki-mvp` 克隆下的 `wiki/`，请设置环境变量：
+本 skill 中的相对路径（如 `schema/AGENTS.md`、`wiki/`、`raw/`、`logs/`）必须先通过用户目录配置文件解析到本机 `llm-wiki-mvp` 仓库根。
 
-- **变量名：** `LLM_WIKI_ROOT`
-- **含义：** 本机 `llm-wiki-mvp` 仓库根的绝对路径（该根下须存在 `schema/AGENTS.md`、`wiki/` 等）。
+- **配置文件：** `%USERPROFILE%\.config\llm-wiki-mvp\config.json`
+- **字段名：** `root`
+- **含义：** 本机 `llm-wiki-mvp` 仓库根的绝对路径（不是 `wiki/` 子目录；该根下须存在 `schema/AGENTS.md`、`wiki/` 等）。
+
+配置示例：
+
+```json
+{
+  "root": "E:\\code\\llm-wiki-mvp"
+}
+```
 
 **解析规则：**
 
-1. 若 `LLM_WIKI_ROOT` 已设置且非空，本 skill 中所有上述相对路径均相对于该路径解析（Windows：将子路径与 `$env:LLM_WIKI_ROOT` 拼接；macOS/Linux：等价路径拼接）。
-2. 若未设置，相对路径相对于当前工作区根目录（与直接在本仓库根打开工作区时使用本 skill 的行为一致）。
+1. 必须先读取 `%USERPROFILE%\.config\llm-wiki-mvp\config.json`。
+2. 若配置文件存在、JSON 有效，且 `root` 为非空字符串，本 skill 中所有相对路径均相对于 `root` 解析。
+3. 若配置文件不存在、JSON 无法解析、`root` 缺失或为空，停止执行并提示用户创建或修复该配置文件。
+4. 旧环境变量 `LLM_WIKI_ROOT` 已弃用；即使存在，也不得作为路径来源。若检测到它，请提示用户迁移到 `%USERPROFILE%\.config\llm-wiki-mvp\config.json`。
 
-**校验（强制执行）：** 当依赖 `LLM_WIKI_ROOT` 读取知识库时，在**首次**读取该仓库内文件之前，必须先确认该根下存在 `schema/AGENTS.md`。若不存在，停止执行并提示用户：`LLM_WIKI_ROOT` 指向的目录不是有效的 llm-wiki-mvp 仓库；**不得**在该根下新建 `wiki/` 等目录。
+**校验（强制执行）：** 在首次读写仓库内文件之前，必须确认 `root` 下同时存在 `schema/AGENTS.md` 和 `wiki/`。若任一缺失，停止执行并提示：配置文件中的 `root` 不是有效的 `llm-wiki-mvp` 仓库根；不得自动创建 `wiki/`、`raw/`、`schema/` 等目录。
 
-**配置示例（Windows PowerShell，用户级持久，重启 Cursor 或新终端后生效）：**
+**配置示例（Windows PowerShell）：**
 
 ```powershell
-[System.Environment]::SetEnvironmentVariable('LLM_WIKI_ROOT', 'E:\path\to\llm-wiki-mvp', 'User')
+$configDir = Join-Path $env:USERPROFILE '.config\llm-wiki-mvp'
+New-Item -ItemType Directory -Force -Path $configDir | Out-Null
+$config = @{ root = 'E:\code\llm-wiki-mvp' } | ConvertTo-Json
+Set-Content -Encoding UTF8 (Join-Path $configDir 'config.json') $config
 ```
 
-将示例中的路径改为你本机克隆路径。会话级仅当前进程可用：`$env:LLM_WIKI_ROOT = 'E:\path\to\llm-wiki-mvp'`。
+**快速验证（PowerShell）：**
 
-**快速验证（PowerShell）：** `Test-Path (Join-Path $env:LLM_WIKI_ROOT 'schema/AGENTS.md')` 应为 `True`。
+```powershell
+$config = Get-Content (Join-Path $env:USERPROFILE '.config\llm-wiki-mvp\config.json') -Raw | ConvertFrom-Json
+Test-Path (Join-Path $config.root 'schema/AGENTS.md')
+Test-Path (Join-Path $config.root 'wiki')
+```
 
 ## 输入
 
@@ -81,7 +99,7 @@ description: 根据任务在本地 llm-wiki wiki/ 中只读检索最佳实践并
 
 ## 实现后验证（手工）
 
-在设置 `LLM_WIKI_ROOT` 指向本仓库克隆时各走查一次：
+在用户配置文件 `root` 指向本仓库克隆时各走查一次：
 
 1. **有明确实践：** 任务能被 wiki 支撑 → 工作区有预期变更，且回复引用了 wiki 依据。
 2. **无相关实践：** 回复明确「未找到」，且未伪造 wiki 条目。
