@@ -20,6 +20,37 @@ npx openskills read ingest
 - `openskills sync` 会生成或更新根级 `AGENTS.md`
 - agent 之后就可以按已加载的 skill 指令执行 task-start、task-close、ingest、query、lint
 
+## Updating A Private Knowledge Repo
+
+如果你把这个公共仓库作为产品功能源，同时维护一个私人知识仓库用于实际沉淀内容，推荐结构是：
+
+- 公共产品仓库：开发和发布 `skills/`、`schema/`、README 等功能。
+- 私人知识仓库：保存个人的 `raw/`、`wiki/`、`.obsidian/`、`logs/` 内容，并定期合并公共功能更新。
+
+在私人仓库中添加公共仓库作为只读上游：
+
+```powershell
+cd E:\path\to\your-private-llm-wiki
+git remote add upstream https://github.com/seenbefore/llm-wiki-mvp.git
+git remote set-url --push upstream DISABLED
+```
+
+之后每次更新公共功能：
+
+```powershell
+cd E:\path\to\your-private-llm-wiki
+git fetch upstream
+git merge upstream/master
+git push private master
+```
+
+如果合并时出现冲突，通常按这个原则处理：
+
+- `skills/`、`schema/`、产品 README：优先采用公共仓库版本，再补充你的私人说明。
+- `raw/`、`wiki/`、`.obsidian/`、`logs/`：优先保留私人仓库版本。
+
+不要从私人知识仓库推送到 `upstream`；私人仓库只推自己的 `private` remote。
+
 ## How To Use
 
 ### 1. Task Start
