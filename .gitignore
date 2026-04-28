@@ -1,11 +1,9 @@
-raw/
-wiki/
-logs/
-.obsidian/
+.obsidian/workspace*.json
+.obsidian/workspaces/
+.obsidian/cache/
+.obsidian/plugins/
+.obsidian/data.json
 .claude/
-.agents/
-.cursor/
 AGENTS.md
-LLM_WIKI_ROOT
 Thumbs.db
 Desktop.ini
