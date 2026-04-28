@@ -6,19 +6,23 @@
 
 把 `raw/` 中的原始资料持续编译进 `wiki/`，形成可浏览、可追溯、可增量维护的知识库。
 
+重要 AI 任务应接入任务生命周期：开始前用 `task-start` 从 `wiki/` 提取上下文，结束时用 `task-close` 把值得保留的结果写入 `raw/task-notes/`，再按需要通过 `ingest` 进入知识层。
+
 ## 目录边界
 
-- `raw/` 是原始资料层。Agent 不直接改写原始内容。
+- `raw/` 是原始资料层。Agent 不直接改写已有原始内容；`task-close` 可在 `raw/task-notes/` 新增任务记录。
 - `wiki/` 是知识层。Agent 主要在这里新增和更新页面。
 - `schema/` 是规则层。仅在工作流或模板需要演进时更新。
 - `logs/` 是时间线层。重要 ingest、query 落档和 lint 都要记一笔。
 
 ## 默认行为
 
-1. 处理新资料时，先在 `wiki/sources/` 生成来源摘要页。
-2. 再判断是否需要更新 `wiki/topics/`、`wiki/entities/`、`wiki/concepts/`。
-3. 若用户问题形成可复用结论，把结果沉淀到 `wiki/analyses/`。
-4. 每次重要变更后更新 `wiki/index.md` 和 `logs/log.md`。
+1. 重要任务开始前，先用 `task-start` 只读 `wiki/`，生成任务上下文启动包。
+2. 重要任务结束时，用 `task-close` 判断是否值得沉淀；默认只新增 `raw/task-notes/` 原始任务记录。
+3. 处理新资料或 task note 时，先在 `wiki/sources/` 生成来源摘要页。
+4. 再判断是否需要更新 `wiki/topics/`、`wiki/entities/`、`wiki/concepts/`。
+5. 若用户问题形成可复用结论，把结果沉淀到 `wiki/analyses/`。
+6. 每次重要变更后更新 `wiki/index.md` 和 `logs/log.md`。
 
 ## 写作规则
 
@@ -60,10 +64,10 @@
 
 1. 阅读 `schema/workflows.md`
 2. 参考 `schema/templates/`
-3. 执行 ingest、query 或 lint
-4. 更新 `wiki/index.md`
-5. 记录 `logs/log.md`
+3. 执行 task-start、task-close、ingest、query 或 lint
+4. 按对应工作流判断是否需要更新 `wiki/index.md`
+5. 按对应工作流判断是否需要记录 `logs/log.md`
 
 ## Skill 调度
 
-当任务明确属于 ingest、query、lint 时，优先调用对应本地 skill，而不是临时自由发挥。
+当任务明确属于 task-start、task-close、ingest、query、lint 时，优先调用对应本地 skill，而不是临时自由发挥。

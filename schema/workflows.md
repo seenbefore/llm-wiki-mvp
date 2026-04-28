@@ -1,6 +1,40 @@
 # Workflows
 
-这个文件描述 MVP 阶段的三条核心工作流：`ingest`、`query`、`lint`。
+这个文件描述 MVP 阶段的五条核心工作流：`task-start`、`task-close`、`ingest`、`query`、`lint`。
+
+## Task Start
+
+适用场景：用户准备开始一个超过 30 分钟的重要 AI 任务，需要先复用当前 Wiki 中的已有上下文。
+
+步骤：
+
+1. 读取 `schema/AGENTS.md` 与 `wiki/index.md`。
+2. 按任务描述定位相关主题页、概念页、实体页、分析页和来源页。
+3. 汇总已有上下文、可复用结论和信息缺口。
+4. 输出本次任务建议加载的上下文包。
+5. 暂停在任务启动结果，不直接执行任务。
+
+最小产出：
+
+- 1 份任务启动上下文
+- 0 个文件变更
+
+## Task Close
+
+适用场景：一个重要任务结束后，需要判断本次结果是否值得沉淀，并为后续 ingest 准备原始记录。
+
+步骤：
+
+1. 回顾任务目标、过程、结论、命令、踩坑和开放问题。
+2. 判断是否值得沉淀到 LLM Wiki。
+3. 若值得，默认写入 `raw/task-notes/YYYY-MM-DD-<task-slug>.md`。
+4. 不直接修改 `wiki/`；需要进入知识层时，后续再对该 raw 记录执行 ingest。
+5. 输出建议的下一步 ingest 命令和 git commit message。
+
+最小产出：
+
+- 0 到 1 个 raw task note
+- 1 条下一步 ingest 建议
 
 ## Ingest
 
