@@ -54,6 +54,8 @@ Test-Path (Join-Path $config.root 'wiki')
 - 最小输入：一个或一组 `raw/` 来源路径
 - 可选上下文：用户指定的主题、实体、概念或预期落点
 
+`task-close web` 保存的 ChatGPT 网页版沉淀笔记也属于 `raw/` 来源。网页 AI 的输出不是事实源，不能跳过 `raw/` 和 `wiki/sources/` 直接写入主题页、概念页或分析页。
+
 ## 输出
 
 - 默认输出：新增或更新一个 `wiki/sources/` 来源页、更新 `wiki/index.md`、追加 `logs/log.md`
@@ -94,6 +96,7 @@ Test-Path (Join-Path $config.root 'wiki')
 - 信息不足时只落来源页
 - 冲突未解时标 `冲突/待核实`
 - 不能回指来源的推测，不写入综合结论
+- ChatGPT 网页回流内容必须先生成或更新 `wiki/sources/` 来源页，再按需增量更新综合页
 - 严格遵守 `[[文件名|显示文本]]` 与 `aliases` 规范
 - 只有真实文件名或显式 `aliases` 完全匹配时，才能使用 `[[目标名]]`
 

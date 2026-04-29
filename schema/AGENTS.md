@@ -8,6 +8,8 @@
 
 重要 AI 任务应接入任务生命周期：开始前用 `task-start` 从 `wiki/` 提取上下文，结束时用 `task-close` 把值得保留的结果写入 `raw/task-notes/`，再按需要通过 `ingest` 进入知识层。
 
+`task-start` 与 `task-close` 都有 `web` 和 `local` 两种模式：`web` 面向 ChatGPT 网页版或其他网页 AI 的复制粘贴交接；`local` 面向当前本地 agent / Codex 会话。网页 AI 回流内容不得直接写入 `wiki/`，必须先进入 `raw/task-notes/`，再由 `ingest` 编译进知识层。
+
 ## 目录边界
 
 - `raw/` 是原始资料层。Agent 不直接改写已有原始内容；`task-close` 可在 `raw/task-notes/` 新增任务记录。
@@ -17,8 +19,8 @@
 
 ## 默认行为
 
-1. 重要任务开始前，先用 `task-start` 只读 `wiki/`，生成任务上下文启动包。
-2. 重要任务结束时，用 `task-close` 判断是否值得沉淀；默认只新增 `raw/task-notes/` 原始任务记录。
+1. 重要任务开始前，先用 `task-start local` 只读 `wiki/`，生成当前本地任务上下文启动包；如果要把背景喂给 ChatGPT 网页版，使用 `task-start web`。
+2. 重要任务结束时，用 `task-close local` 判断本地任务是否值得沉淀；如果内容来自 ChatGPT 网页版，使用 `task-close web` 接收网页沉淀笔记。默认只新增 `raw/task-notes/` 原始任务记录。
 3. 处理新资料或 task note 时，先在 `wiki/sources/` 生成来源摘要页。
 4. 再判断是否需要更新 `wiki/topics/`、`wiki/entities/`、`wiki/concepts/`。
 5. 若用户问题形成可复用结论，把结果沉淀到 `wiki/analyses/`。

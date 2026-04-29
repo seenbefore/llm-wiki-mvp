@@ -97,10 +97,16 @@ npx openskills read task-start
 
 然后在重要任务开始前让 agent 做任务启动，例如：
 
-- task-start：我要开始一个新任务，主题是 AI 工具整合
-- task-start：我要做 DGX Spark 本地模型部署，请先查 wiki
+- task-start local：我要开始一个新任务，主题是 AI 工具整合
+- task-start local：我要做 DGX Spark 本地模型部署，请先查 wiki
+- task-start web：为这个任务生成一份给 ChatGPT 网页版使用的上下文包
 
-`task-start` 会只读 `wiki/`，输出相关页面、已有上下文、可复用结论、当前缺口和本次建议上下文包；它不直接执行任务，也不写入仓库。
+`task-start` 会只读 `wiki/`，输出相关页面、已有上下文、可复用结论、当前缺口和本次建议上下文包；启动阶段不写入仓库。
+
+`task-start` 有两种模式：
+
+- `web`：输出可直接复制到 ChatGPT 网页版或其他网页 AI 的 Markdown 上下文包，输出后停止，不执行本地任务。
+- `local`：输出给当前本地 agent / Codex 会话使用的任务启动上下文；若用户任务本身是执行型，启动后可以继续进入计划、实现或验证。
 
 ### 2. Task Close
 
@@ -112,10 +118,31 @@ npx openskills read task-close
 
 然后在重要任务结束时让 agent 做任务收尾，例如：
 
-- task-close：判断这次任务是否值得沉淀到 LLM-wiki
-- task-close：把本次 AI 工具整合讨论整理成 raw task note
+- task-close local：判断这次本地任务是否值得沉淀到 LLM-wiki
+- task-close local：把本次 AI 工具整合讨论整理成 raw task note
+- task-close web：生成一段给 ChatGPT 网页版使用的可沉淀笔记整理提示词
+- task-close web：下面是 ChatGPT 网页输出的沉淀笔记，请保存为 raw task note
 
 `task-close` 默认只写入 `raw/task-notes/YYYY-MM-DD-<task-slug>.md`，作为后续 `ingest` 的原始资料；它不直接改 `wiki/`。
+
+`task-close` 有两种模式：
+
+- `web`：面向网页 AI 的跨工具回流。可以生成给 ChatGPT 网页版使用的沉淀提示词，也可以接收网页 AI 返回的沉淀笔记并保存到 `raw/task-notes/`。
+- `local`：面向当前本地 agent / Codex 会话的任务收尾，保留目标、变更、验证、决策、踩坑和后续事项。
+
+网页 AI 的输出不是事实源；回流内容必须先进入 `raw/task-notes/`，再用 `ingest` 编译进 `wiki/`。
+
+### ChatGPT Web Bridge
+
+如果你同时使用 ChatGPT Plus 网页版和本地 LLM Wiki，推荐用这条闭环：
+
+1. 本地运行 `task-start web`，生成给 ChatGPT 网页版的任务上下文包。
+2. 把上下文包复制到 ChatGPT 网页版，做方案讨论、写作或复杂推理。
+3. 结束时运行 `task-close web` 生成沉淀提示词，要求 ChatGPT 输出可沉淀 Markdown 笔记。
+4. 把网页返回的笔记交给 `task-close web`，保存到 `raw/task-notes/`。
+5. 对该 raw task note 运行 `ingest`，编译进 `wiki/`。
+
+默认不要把 ChatGPT Memory 或 Projects 当作长期事实源；本地 Wiki / 仓库才是事实源。
 
 ### 3. Ingest
 

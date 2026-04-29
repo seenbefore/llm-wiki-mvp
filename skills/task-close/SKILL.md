@@ -7,7 +7,12 @@ description: Close an important task by deciding what should be preserved and wr
 
 本 skill 用于在一个重要任务结束时，判断本次任务是否值得沉淀，并把值得保留的内容写入 `raw/task-notes/`，作为后续 `ingest` 的原始资料。
 
-它默认**不直接写 `wiki/`**。知识层更新应由 `ingest` 处理。
+它支持两种模式：
+
+- `web`：面向 ChatGPT 网页版或其他网页 AI 的跨工具回流。可以生成“可沉淀笔记整理提示词”，也可以接收网页 AI 返回的沉淀笔记并保存到 `raw/task-notes/`。
+- `local`：面向当前本地 agent / Codex 会话的任务收尾。总结本地任务目标、变更、验证、决策、踩坑和后续事项，并按需写入 `raw/task-notes/`。
+
+它默认**不直接写 `wiki/`**。知识层更新应由 `ingest` 处理。网页 AI 回流内容也必须先进入 `raw/task-notes/`，再由 `ingest` 编译进 `wiki/`。
 
 ## Wiki 根路径（用户配置文件）
 
@@ -55,16 +60,27 @@ Test-Path (Join-Path $config.root 'wiki')
 
 - **必需：** 本次任务的目标、过程或对话上下文。
 - **可选：** 用户指定的任务名、日期、相关页面、是否需要立即写入 raw。
+- **可选模式：** `web` 或 `local`。
+
+## 模式选择
+
+- 用户明确提到 `ChatGPT 网页`、`网页版 AI`、`复制给网页`、`网页输出`、`Projects`、`沉淀笔记提示词` 时，使用 `web` 模式。
+- 用户要求总结当前 Codex、本地仓库或当前工作区中的已完成任务时，使用 `local` 模式。
+- 用户未指定模式时，默认使用 `local` 模式；但若输入明显来自网页 AI 的沉淀笔记，则使用 `web` 模式。
 
 ## 触发场景
 
 当用户说出以下意图时使用：
 
 - `task-close`
+- `task-close web`
+- `task-close local`
 - 总结一下这次任务
 - 判断是否值得沉淀到 wiki
 - 生成任务记录
 - 更新我的 LLM-wiki 的原始资料
+- 生成一段给 ChatGPT 网页版使用的可沉淀笔记提示词
+- 下面是 ChatGPT 网页输出的沉淀笔记，请保存为 raw task note
 
 ## 必读（开始前）
 
@@ -104,6 +120,52 @@ raw/task-notes/YYYY-MM-DD-<task-slug>.md
 - `<task-slug>` 使用简短 kebab-case 英文或拼音。
 - 若无法安全命名，先在输出中给出建议路径并等待用户确认。
 
+## `web` 模式
+
+`web` 模式有两个子场景。
+
+### 生成网页 AI 沉淀提示词
+
+当用户要在 ChatGPT 网页版结束任务时，输出以下可直接复制的提示词：
+
+```text
+请把本次对话整理成一份适合沉淀到本地 LLM Wiki 的 Markdown 笔记。
+
+要求：
+1. 标题
+2. 背景
+3. 本次结论
+4. 可复用方法
+5. 决策记录
+6. 后续待办
+7. 不确定点
+8. 适合进入哪些主题页/概念页
+
+不要保留闲聊过程，只保留以后可复用的信息。
+```
+
+### 接收网页 AI 沉淀笔记
+
+当用户粘贴 ChatGPT 网页版返回的沉淀笔记时：
+
+1. 读取 `schema/AGENTS.md` 与 `wiki/index.md`。
+2. 判断内容是否值得沉淀。
+3. 值得沉淀时，默认写入 `raw/task-notes/YYYY-MM-DD-<task-slug>.md`。
+4. 不直接修改 `wiki/`。
+5. 输出下一步 `ingest raw/task-notes/{{文件名}}` 建议。
+
+网页 AI 的输出不是事实源，只是待摄入原始资料；进入知识层前必须经过 `ingest`。
+
+## `local` 模式
+
+`local` 模式用于当前本地任务收尾：
+
+1. 总结任务目标、完成内容、验证结果、关键决策、踩坑和后续事项。
+2. 判断哪些内容具有长期复用价值。
+3. 值得沉淀时，默认写入 `raw/task-notes/YYYY-MM-DD-<task-slug>.md`。
+4. 不直接修改 `wiki/`。
+5. 输出下一步 `ingest` 建议和 git commit message。
+
 ## Raw 记录模板
 
 ```md
@@ -135,6 +197,34 @@ raw/task-notes/YYYY-MM-DD-<task-slug>.md
 
 ## 输出格式
 
+### `web` 模式：生成提示词
+
+```md
+# Task Close Web Prompt: {{任务名}}
+
+## 给 ChatGPT 网页版的提示词
+
+{{可复制提示词}}
+```
+
+### `web` 模式：接收网页沉淀笔记
+
+```md
+# Task Close Web Intake: {{任务名}}
+
+## 1. 是否值得沉淀
+
+## 2. 建议写入位置
+
+## 3. 已写入或建议写入的 raw 内容
+
+## 4. 不建议写入的内容
+
+## 5. 下一步 ingest 建议
+```
+
+### `local` 模式
+
 ```md
 # Task Close: {{任务名}}
 
@@ -156,6 +246,7 @@ raw/task-notes/YYYY-MM-DD-<task-slug>.md
 - 默认允许写入：`raw/task-notes/`
 - 默认不直接写入：`wiki/`
 - 默认不修改：`schema/`、`skills/`、`logs/`
+- `web` 模式接收的 ChatGPT 网页输出必须先作为 raw 记录保存；不得跳过 raw 直接写综合页。
 
 若本次任务本身就是修改协议、schema 或 skill，则可以按用户任务要求修改对应文件；否则只把建议写入 raw 记录。
 
